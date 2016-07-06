@@ -1,0 +1,36 @@
+{
+  "name": "redux-mount-store",
+  "author": "RMN Engineering",
+  "contributors": [
+    "Lon Ingram <lingram@rmn.com>",
+    "Eric Capps <ecapps@rmn.com>"
+  ],
+  "license": "MIT",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "lodash.assign": "^4.0.9",
+    "lodash.get": "^4.3.0",
+    "lodash.has": "^4.4.0",
+    "lodash.mapvalues": "^4.4.0",
+    "lodash.merge": "^4.4.0",
+    "lodash.omit": "^4.3.0",
+    "lodash.set": "^4.2.0",
+    "object-path-immutable": "^0.4.0"
+  },
+  "devDependencies": {
+    "eslint": "^2.11.0",
+    "redux": "^3.5.2",
+    "sinon": "^1.17.4",
+    "tap": "^5.7.1"
+  },
+  "scripts": {
+    "test": "tap test/*.js",
+    "eslint": "eslint *.js **/*.js"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [],
+  "description": "Store enhancer for redux adding mounting capabilities"
+}
