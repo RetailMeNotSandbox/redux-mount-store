@@ -387,6 +387,19 @@ module.exports = createStore =>
 
 		store.mount = mount.bind(null, null);
 
+		function isAncestor(path, possibleAncestor) {
+			path = path.split('.');
+			possibleAncestor = possibleAncestor.split('.');
+
+			for (let i = 0; i < possibleAncestor.length; i++) {
+				if (path[i] !== possibleAncestor[i]) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		function unmount(host, path) {
 			path = host ? `${host}.${path}` : path;
 
@@ -396,7 +409,7 @@ module.exports = createStore =>
 
 			const toUnmount = Array.from(mounts.keys())
 				.filter(key => {
-					return key.startsWith(path);
+					return isAncestor(key, path);
 				})
 				.sort((key1, key2) => {
 					return key1.split('.').length < key2.split('.').length;

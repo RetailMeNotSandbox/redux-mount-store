@@ -175,6 +175,35 @@ tap.test('unmount()', t => {
 		t.end();
 	});
 
+	t.test('does not dispatch an UNMOUNT action for paths with same prefix',
+		t => {
+			const store = redux.createStore(state => state, {}, reduxMountStore);
+			const path = 'path';
+			const unrelatedPath = 'pathtwo';
+			const anotherUnrelatedPath = 'pathtwo.foo';
+
+			store.mount(path);
+			store.mount(unrelatedPath);
+			store.mount(anotherUnrelatedPath);
+
+			sinon.stub(store, 'dispatch');
+			store.unmount(path);
+
+			t.ok(store.dispatch.neverCalledWithMatch({
+				payload: {
+					path: unrelatedPath
+				}
+			}), 'UNMOUNT action not dispatched for paths with same prefix');
+
+			t.ok(store.dispatch.neverCalledWithMatch({
+				payload: {
+					path: anotherUnrelatedPath
+				}
+			}), 'UNMOUNT action not dispatched for paths with same prefix');
+
+			t.end();
+		});
+
 	t.test('reduction', t => {
 		const rootReducer = sinon.stub().returnsArg(0);
 		const store = redux.createStore(rootReducer, {}, reduxMountStore);
