@@ -157,6 +157,15 @@ tap.test('object-path-immutable-transaction', t => {
 			t.end();
 		});
 
+		t.test('throws if called after `commit`', t => {
+			const transaction = immutableTransaction({});
+
+			transaction.commit();
+			t.throws(() => transaction.set('foo', 'bar'));
+
+			t.end();
+		});
+
 		t.end();
 	});
 
@@ -291,6 +300,17 @@ tap.test('object-path-immutable-transaction', t => {
 				transaction,
 				'returns the transaction'
 			);
+
+			t.end();
+		});
+
+		t.test('throws if called after `commit`', t => {
+			const transaction = immutableTransaction({
+				foo: 'bar'
+			});
+
+			transaction.commit();
+			t.throws(() => transaction.del('foo'));
 
 			t.end();
 		});
@@ -433,6 +453,17 @@ tap.test('object-path-immutable-transaction', t => {
 			t.end();
 		});
 
+		t.test('throws if called after `commit`', t => {
+			const transaction = immutableTransaction({
+				foo: []
+			});
+
+			transaction.commit();
+			t.throws(() => transaction.push('foo', 'bar'));
+
+			t.end();
+		});
+
 		t.end();
 	});
 
@@ -516,7 +547,6 @@ tap.test('object-path-immutable-transaction', t => {
 			'set not called for inherited properties'
 		);
 
-
 		t.test('does nothing if not passed enough arguments', t => {
 			const source = {
 				foo: {
@@ -570,6 +600,17 @@ tap.test('object-path-immutable-transaction', t => {
 				transaction,
 				'returns the transaction'
 			);
+
+			t.end();
+		});
+
+		t.test('throws if called after `commit`', t => {
+			const transaction = immutableTransaction({
+				foo: {}
+			});
+
+			transaction.commit();
+			t.throws(() => transaction.assign('foo', { bar: 'applesauce' }));
 
 			t.end();
 		});
