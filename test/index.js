@@ -224,6 +224,64 @@ tap.test('redux-mount-store', t => {
 					t.end();
 				});
 
+			t.test('ancestor stores observe changes made by descendants', t => {
+				const store = redux.createStore(
+					state => state,
+					{
+						rootOwn: 'root'
+					},
+					reduxMountStore
+				);
+
+				const hostStore =
+					store.mount('host', {
+						rootViewed: 'rootOwn'
+					})(
+						state => state,
+						{
+							hostOwn: 'host'
+						}
+					);
+
+				const childReducer = sinon.spy((state, action) => {
+					if (action.type === 'MUTATE_CHILD') {
+						state = immutable.set(state, 'childOwn', 'new child');
+					}
+
+					return state;
+				});
+				const childStore =
+					hostStore.mount('child', {
+						hostViewed: 'hostOwn'
+					})(
+						childReducer,
+						{
+							childOwn: 'child'
+						}
+					);
+
+				childReducer.reset();
+				childStore.dispatch({
+					type: 'MUTATE_CHILD'
+				});
+
+				t.match(hostStore.getState(), {
+					child: {
+						childOwn: 'new child'
+					}
+				}, 'host mounted store observes reduced change by descendant');
+
+				t.match(store.getState(), {
+					host: {
+						child: {
+							childOwn: 'new child'
+						}
+					}
+				}, 'root store observes reduced change by descendant');
+
+				t.end();
+			});
+
 			t.test('mounted reducers called with a null context', t => {
 				const store = redux.createStore(
 					state => state,
