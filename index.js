@@ -150,15 +150,8 @@ module.exports = createStore =>
 				})
 				.map(path => path.join('.'));
 
-			paths.forEach(path => {
+			function updateMountCache(path) {
 				const mount = mounts.get(path);
-
-				if (!mount.reducer) {
-					// if `mount` has been called for a path, but the corresponding
-					// mounted store creator *not* called, then no reducer will be
-					// registered, so skip that path
-					return;
-				}
 
 				const ownState = _get(newState, path);
 				const viewedState = getViewedState(path);
@@ -170,6 +163,19 @@ module.exports = createStore =>
 					// so recalculate its merged state
 					updateCachedState(path, ownState);
 				}
+			}
+
+			paths.forEach(path => {
+				const mount = mounts.get(path);
+
+				if (!mount.reducer) {
+					// if `mount` has been called for a path, but the corresponding
+					// mounted store creator *not* called, then no reducer will be
+					// registered, so skip that path
+					return;
+				}
+
+				updateMountCache(path);
 
 				const newMergedState =
 					mount.reducer.call(null, mount.cache.mergedState, action);
@@ -177,12 +183,16 @@ module.exports = createStore =>
 				if (newMergedState !== mount.cache.mergedState) {
 					// FIXME: check that viewed state is not modified
 					// FIXME: test that asserts that removed viewedState is reapplied
-					mount.cache.mergedState = _merge(newMergedState, viewedState);
+					mount.cache.mergedState =
+						_merge(newMergedState, mount.cache.viewedState);
 					mount.cache.ownState =
 						_omit(newMergedState, Object.keys(mount.viewedStateSpec));
 					newState = immutable.set(newState, path, mount.cache.ownState);
 				}
 			});
+
+			// update cached state for all mounts
+			paths.forEach(updateMountCache);
 
 			return newState;
 		};
