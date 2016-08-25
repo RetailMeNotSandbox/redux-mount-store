@@ -86,7 +86,7 @@ function normalizeViewedStateSpec(viewedStateSpec) {
 
 module.exports = createStore =>
 	function createMountableStore(rootReducer, initialState, enhancer) {
-		const mounts = new Map();
+		const mounts = {};
 		let rootState = initialState;
 
 		if (typeof enhancer !== 'undefined') {
@@ -128,9 +128,9 @@ module.exports = createStore =>
 				// remove the unmounted store's own state from the root store's state
 				newState = immutable.del(newState, action.payload.path);
 
-				mounts.delete(action.payload.path);
+				mounts[action.payload.path] = undefined;
 			} else if (action.type === QUERY_RESULT) {
-				let mount = mounts.get(action.payload.path);
+				let mount = mounts[action.payload.path];
 				let queriedStateSpec = _mapValues(
 					action.payload.result,
 					result => () => _get(rootState, result)
@@ -143,7 +143,11 @@ module.exports = createStore =>
 			// FIXME: calculate this array at mount/unmount time
 			// iterate over mounted reducers, breadth-first
 			let paths = [];
-			mounts.forEach((mount, path) => paths.push(path.split('.')));
+			for (var path in mounts) {
+				if (mounts.hasOwnProperty(path)) {
+					paths.push(path.split('.'));
+				}
+			}
 			paths = paths.sort(
 				(pathA, pathB) => {
 					return pathA.length - pathB.length;
@@ -151,7 +155,7 @@ module.exports = createStore =>
 				.map(path => path.join('.'));
 
 			function updateMountCache(path) {
-				const mount = mounts.get(path);
+				const mount = mounts[path];
 
 				const ownState = _get(newState, path);
 				const viewedState = getViewedState(path);
@@ -166,7 +170,7 @@ module.exports = createStore =>
 			}
 
 			paths.forEach(path => {
-				const mount = mounts.get(path);
+				const mount = mounts[path];
 
 				if (!mount.reducer) {
 					// if `mount` has been called for a path, but the corresponding
@@ -217,11 +221,11 @@ module.exports = createStore =>
 		 * @returns {Object} the calculated viewed state
 		 */
 		function getViewedState(path) {
-			const mount = mounts.get(path);
+			const mount = mounts[path];
 			const viewedStateSpec = mount.viewedStateSpec;
 			const hostMergedState = mount.host === null ?
 				rootState :
-				mounts.get(mount.host).cache.mergedState;
+				mounts[mount.host].cache.mergedState;
 			let viewedState = mount.cache.viewedState || {};
 
 			for (let spec in viewedStateSpec) {
@@ -248,7 +252,7 @@ module.exports = createStore =>
 		 * @param {Object} ownState - the state object at the path in the root store
 		 */
 		function updateCachedState(path, ownState) {
-			const mount = mounts.get(path);
+			const mount = mounts[path];
 			const viewedState = getViewedState(path);
 
 			if (ownState !== mount.cache.ownState ||
@@ -309,7 +313,7 @@ module.exports = createStore =>
 				);
 			}
 
-			if (mounts.has(mountPath)) {
+			if (typeof mounts[mountPath] !== 'undefined') {
 				// this mount is taken
 				throw new Error(
 					`Mount already exists at path "${path}" on "${host}"`
@@ -324,20 +328,17 @@ module.exports = createStore =>
 				);
 			}
 
-			mounts.set(
-				mountPath,
-				{
-					path,
-					host: host,
-					cache: {
-						ownState: null,
-						viewedState: null,
-						mergedState: null
-					},
-					viewedStateSpec: normalizeViewedStateSpec(viewedStateSpec),
-					reducer: null
-				}
-			);
+			mounts[mountPath] = {
+				path,
+				host: host,
+				cache: {
+					ownState: null,
+					viewedState: null,
+					mergedState: null
+				},
+				viewedStateSpec: normalizeViewedStateSpec(viewedStateSpec),
+				reducer: null
+			};
 
 			// return mounted store creator with appropriate context, etc.
 			let called = false;
@@ -359,7 +360,7 @@ module.exports = createStore =>
 						throw new Error('Expected the reducer to be a function.');
 					}
 
-					mounts.get(mountPath).reducer = mountReducer;
+					mounts[mountPath].reducer = mountReducer;
 
 					store.dispatch(createMountAction(mountPath, mountInitialState));
 					store.dispatch(createInitAction(mountPath));
@@ -367,14 +368,14 @@ module.exports = createStore =>
 					// FIXME: all of these methods should check if the store is still
 					// mounted and throw if not
 					return {
-						getState: () => mounts.get(mountPath).cache.mergedState,
+						getState: () => mounts[mountPath].cache.mergedState,
 						dispatch: action => {
 							// FIXME: what should we do here? attach the mountPath to the
 							// action?
 							return store.dispatch(action);
 						},
 						replaceReducer: nextReducer => {
-							mounts.get(mountPath).reducer = nextReducer;
+							mounts[mountPath].reducer = nextReducer;
 							store.dispatch(createInitAction(mountPath));
 						},
 						subscribe: store.subscribe.bind(store),
@@ -413,11 +414,11 @@ module.exports = createStore =>
 		function unmount(host, path) {
 			path = host ? `${host}.${path}` : path;
 
-			if (!mounts.has(path)) {
+			if (!mounts[path]) {
 				throw new Error(`No such mount ${path}`);
 			}
 
-			const toUnmount = Array.from(mounts.keys())
+			const toUnmount = Array.from(Object.keys(mounts))
 				.filter(key => {
 					return isAncestor(key, path);
 				})
