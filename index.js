@@ -128,7 +128,7 @@ module.exports = createStore =>
 				// remove the unmounted store's own state from the root store's state
 				newState = immutable.del(newState, action.payload.path);
 
-				mounts[action.payload.path] = undefined;
+				delete mounts[action.payload.path];
 			} else if (action.type === QUERY_RESULT) {
 				let mount = mounts[action.payload.path];
 				let queriedStateSpec = _mapValues(
@@ -143,10 +143,8 @@ module.exports = createStore =>
 			// FIXME: calculate this array at mount/unmount time
 			// iterate over mounted reducers, breadth-first
 			let paths = [];
-			for (var path in mounts) {
-				if (mounts.hasOwnProperty(path)) {
-					paths.push(path.split('.'));
-				}
+			for (const path in mounts) {
+				paths.push(path.split('.'));
 			}
 			paths = paths.sort(
 				(pathA, pathB) => {
@@ -313,7 +311,7 @@ module.exports = createStore =>
 				);
 			}
 
-			if (typeof mounts[mountPath] !== 'undefined') {
+			if (mountPath in mounts) {
 				// this mount is taken
 				throw new Error(
 					`Mount already exists at path "${path}" on "${host}"`
@@ -330,7 +328,7 @@ module.exports = createStore =>
 
 			mounts[mountPath] = {
 				path,
-				host: host,
+				host,
 				cache: {
 					ownState: null,
 					viewedState: null,
@@ -414,7 +412,7 @@ module.exports = createStore =>
 		function unmount(host, path) {
 			path = host ? `${host}.${path}` : path;
 
-			if (!mounts[path]) {
+			if (!(path in mounts)) {
 				throw new Error(`No such mount ${path}`);
 			}
 
