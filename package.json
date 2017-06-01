@@ -4,10 +4,10 @@
   "contributors": [
     "Lon Ingram <lingram@rmn.com>",
     "Eric Capps <ecapps@rmn.com>",
-		"Luke Zilioli <lzilioli@rmn.com>"
+    "Luke Zilioli <lzilioli@rmn.com>"
   ],
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "index.js",
   "dependencies": {
     "lodash.assign": "^4.0.9",
