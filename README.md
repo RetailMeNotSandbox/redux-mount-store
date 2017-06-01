@@ -83,3 +83,32 @@ console.log(mountedStore.getState());
 In certain cases, this can be easier than simply mapping the store's state to
 the shape expected by consumers. Additionally, abstracting the layer at which
 the "real" store exists allows it to be plugged it any layer.
+
+## Consuming the redux-mount-store package
+
+There are two ways of consuming `@retailmenot/redux-mount-store` within your
+application.
+
+By default, when you `require('@retailmenot/redux-mount-store')`. You get the redux-
+mount-store source code, which is written using ES6 features such as fat arrow
+functions.
+
+redux-mount-store also publishes an ES5 compatible version of itself to the
+`dist/` directory, which can be consumed by applications that are using webpack
+without babel by aliasing `@retailmenot/redux-mount-store` to the transpiled
+code. In your webpack config:
+
+```javascript
+resolve: {
+    alias: {
+        '@retailmenot/redux-mount-store': path.join(
+            path.dirname(
+                require.resolve('@retailmenot/redux-mount-store')
+            ), 'dist/index.js'
+        )
+    }
+}
+```
+
+The downside to this approach is that sourcemaps in your consuming application
+will point to the transpiled code instead of the redux-mount-store source.

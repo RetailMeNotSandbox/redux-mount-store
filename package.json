@@ -23,14 +23,19 @@
     "object-path-immutable": "^0.4.0"
   },
   "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-es2015": "^6.24.1",
     "eslint": "^2.11.0",
     "redux": "^3.5.2",
     "sinon": "^1.17.4",
     "tap": "^5.7.1"
   },
   "scripts": {
-    "test": "tap test/*.js",
-    "eslint": "eslint *.js **/*.js"
+    "clean": "rm -rf dist/",
+    "compile": "babel index.js --out-dir dist/ && babel lib/ --out-dir dist/lib/",
+    "eslint": "eslint *.js **/*.js",
+    "prepublishOnly": "npm run clean && npm run compile",
+    "test": "tap test/*.js"
   },
   "directories": {
     "test": "test"
